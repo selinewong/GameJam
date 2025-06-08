@@ -1,42 +1,38 @@
 using UnityEngine;
 using UnityEngine.InputSystem;
 
+[RequireComponent(typeof(CharacterController))]
 public class PlayerController : MonoBehaviour
 {
-    private PlayerInputActions _inputActions;
+    private PlayerInputActions _input;
     private CharacterController cc;
-    private Vector3 movementVector;
+    private Vector2 movementVector;
     public float moveSpeed = 5f;
 
-    private void Awake()
+    void Awake()
     {
-        _inputActions = new PlayerInputActions();
+        _input = new PlayerInputActions();
         cc = GetComponent<CharacterController>();
     }
 
-    private void OnEnable()
+    void OnEnable()
     {
-        _inputActions.PlayerActionMap.Enable();           // Use your actual Action Map name
+        _input.PlayerActionMap.Enable();
+        _input.PlayerActionMap.Movement.performed += ctx => movementVector = ctx.ReadValue<Vector2>();
+        _input.PlayerActionMap.Movement.canceled  += ctx => movementVector = Vector2.zero;
     }
 
-    private void OnDisable()
+    void OnDisable()
     {
-        _inputActions.PlayerActionMap.Disable();
+        _input.PlayerActionMap.Movement.performed -= ctx => movementVector = ctx.ReadValue<Vector2>();
+        _input.PlayerActionMap.Movement.canceled  -= ctx => movementVector = Vector2.zero;
+        _input.PlayerActionMap.Disable();
     }
 
-    private void Update()
+    void Update()
     {
-        Vector2 input = _inputActions.PlayerActionMap.Movement.ReadValue<Vector2>();
-        Move(input);
-    }
-
-    private void FixedUpdate()
-    {
-        cc.Move(movementVector * moveSpeed * Time.fixedDeltaTime);
-    }
-
-    void Move(Vector2 input)
-    {
-        movementVector = transform.forward * input.y + transform.right * input.x;
+        Vector3 move = (transform.forward * movementVector.y + transform.right * movementVector.x)
+                       * moveSpeed * Time.deltaTime;
+        cc.Move(move);
     }
 }
