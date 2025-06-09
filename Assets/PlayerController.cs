@@ -83,8 +83,11 @@ private Vector3 gravity;         // Stores the gravity direction and for
     Fall();
     RotateToSurface();
 
+        Vector3 right = Vector3.Cross(transform.up, planet.position - transform.position).normalized;
+        Vector3 forward = Vector3.Cross(right, transform.up).normalized;
+
         Vector3 move = (transform.forward * movementVector.y + transform.right * movementVector.x)
-                       *10 * moveSpeed * Time.deltaTime;
+                        * moveSpeed * Time.deltaTime;
         cc.Move(move);
     }
 }
