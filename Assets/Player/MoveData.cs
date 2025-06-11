@@ -4,6 +4,7 @@ using UnityEngine;
 public class MoveData : ScriptableObject
 {
     public float moveSpeed = 5f;
+
     public float surfaceRotationSpeed = 2f;
 
     public float groundColSize = 0.55f;
