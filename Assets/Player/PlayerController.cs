@@ -7,7 +7,7 @@ public class PlayerController : MonoBehaviour
     private PlayerInputActions _input;
     private CharacterController cc;
     private Vector2 movementVector;
-    public float moveSpeed = 20f;
+    public float moveSpeed = 50f;
     
 public Transform planet;         // Assign this in the Inspector to the planet GameObject
 public float gravitySpeed = 10f; // Gravity strength
@@ -85,12 +85,15 @@ private Vector3 gravity;         // Stores the gravity direction and for
 
         Vector3 right = Vector3.Cross(transform.up, planet.position - transform.position).normalized;
         Vector3 forward = Vector3.Cross(right, transform.up).normalized;
-
-        Vector3 move = (transform.forward * movementVector.y + transform.right * movementVector.x)
-                        * moveSpeed * Time.deltaTime;
-        cc.Move(move + gravity * Time.deltaTime);
-        //Debug.Log("Movement Vector: " + movementVector);
-        //Debug.DrawRay(transform.position, gravity, Color.red);
-        //Debug.Log("Gravity vector: " + gravity);
+        if (movementVector.sqrMagnitude > 0.01f)
+        {
+            Vector3 move = (transform.forward * movementVector.y + transform.right * movementVector.x)
+                            * moveSpeed * Time.deltaTime;
+            cc.Move(move);
+        }
+        cc.Move(gravity * Time.deltaTime);
+        Debug.Log("Movement Vector: " + movementVector);
+        Debug.DrawRay(transform.position, gravity, Color.red);
+        Debug.Log("Gravity vector: " + gravity);
     }
 }
