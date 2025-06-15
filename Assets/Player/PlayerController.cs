@@ -8,23 +8,21 @@ public class PlayerController : MonoBehaviour
     private CharacterController cc;
     private Vector2 movementVector;
     public float moveSpeed = 50f;
-    
-public Transform planet;         // Assign this in the Inspector to the planet GameObject
-public float gravitySpeed = 10f; // Gravity strength
-private Vector3 gravity;         // Stores the gravity direction and force
 
+    public Transform planet;         // Assign this in the Inspector to the planet GameObject
+    public float gravitySpeed = 10f; // Gravity strength
+    private Vector3 gravity;         // Stores the gravity direction and force
 
     private System.Action<InputAction.CallbackContext> onMovePerformed;
     private System.Action<InputAction.CallbackContext> onMoveCanceled;
 
     private void Fall()
     {
-        
-    if (planet == null)
-        {
-            Debug.LogWarning("Planet reference is missing!");
-            return;
-        }
+        if (planet == null)
+        {
+            Debug.LogWarning("Planet reference is missing!");
+            return;
+        }
 
         gravity = (planet.position - transform.position).normalized * gravitySpeed;
     }
@@ -34,12 +32,11 @@ private Vector3 gravity;         // Stores the gravity direction and for
         Quaternion targetRotation = Quaternion.FromToRotation(transform.up, -gravity) * transform.rotation;
         transform.rotation = Quaternion.Slerp(transform.rotation, targetRotation, 1f * Time.deltaTime);
     }
+
     void Awake()
     {
         _input = new PlayerInputActions();
         cc = GetComponent<CharacterController>();
-
-
 
         if (planet == null)
         {
@@ -54,51 +51,51 @@ private Vector3 gravity;         // Stores the gravity direction and for
             }
         }
 
-
         onMovePerformed = ctx => movementVector = ctx.ReadValue<Vector2>();
-    onMoveCanceled = ctx => movementVector = Vector2.zero;
-
+        onMoveCanceled = ctx => movementVector = Vector2.zero;
     }
 
-    
     void OnEnable()
-{
-    _input.PlayerActionMap.Enable();
-    _input.PlayerActionMap.Movement.performed += onMovePerformed;
-    _input.PlayerActionMap.Movement.canceled += onMoveCanceled;
-}
-
+    {
+        _input.PlayerActionMap.Enable();
+        _input.PlayerActionMap.Movement.performed += onMovePerformed;
+        _input.PlayerActionMap.Movement.canceled += onMoveCanceled;
+    }
 
     void OnDisable()
-{
-    _input.PlayerActionMap.Movement.performed -= onMovePerformed;
-    _input.PlayerActionMap.Movement.canceled -= onMoveCanceled;
-    _input.PlayerActionMap.Disable();
-}
-
+    {
+        _input.PlayerActionMap.Movement.performed -= onMovePerformed;
+        _input.PlayerActionMap.Movement.canceled -= onMoveCanceled;
+        _input.PlayerActionMap.Disable();
+    }
 
     void Update()
     {
-
         Fall();
-        RotateToSurface(); //add comment
+        RotateToSurface();
 
         Vector3 gravityDirection = (transform.position - planet.position).normalized;
-Vector3 tangentForward = Vector3.Cross(transform.right, gravityDirection).normalized;
-Vector3 tangentRight = Vector3.Cross(gravityDirection, tangentForward).normalized;
-    if (movementVector.sqrMagnitude > 0.01f)
+        Vector3 tangentForward = Vector3.Cross(transform.right, gravityDirection).normalized;
+        Vector3 tangentRight = Vector3.Cross(gravityDirection, tangentForward).normalized;
+
+        Vector3 move = Vector3.zero;
+
+        if (movementVector.sqrMagnitude > 0.01f)
         {
-            Vector3 move = (tangentForward * movementVector.y + tangentRight * movementVector.x)
-                    * moveSpeed * Time.deltaTime;
-    cc.Move(move);
+            move = (tangentForward * movementVector.y + tangentRight * movementVector.x)
+                * moveSpeed * Time.deltaTime;
+            cc.Move(move);
         }
+
         Vector3 desiredForward = move.normalized;
-if (desiredForward.sqrMagnitude > 0.01f)
-{
-    Quaternion lookRotation = Quaternion.LookRotation(desiredForward, gravityDirection);
-    transform.rotation = Quaternion.Slerp(transform.rotation, lookRotation, 10f * Time.deltaTime);
-}
+        if (desiredForward.sqrMagnitude > 0.01f)
+        {
+            Quaternion lookRotation = Quaternion.LookRotation(desiredForward, gravityDirection);
+            transform.rotation = Quaternion.Slerp(transform.rotation, lookRotation, 10f * Time.deltaTime);
+        }
+
         cc.Move(gravity * Time.deltaTime);
+
         Debug.Log("Movement Vector: " + movementVector);
         Debug.DrawRay(transform.position, gravity, Color.red);
         Debug.Log("Gravity vector: " + gravity);
