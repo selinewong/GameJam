@@ -83,14 +83,21 @@ private Vector3 gravity;         // Stores the gravity direction and for
         Fall();
         RotateToSurface(); //add comment
 
-        Vector3 right = Vector3.Cross(transform.up, planet.position - transform.position).normalized;
-        Vector3 forward = Vector3.Cross(right, transform.up).normalized;
-        if (movementVector.sqrMagnitude > 0.01f)
+        Vector3 gravityDirection = (transform.position - planet.position).normalized;
+Vector3 tangentForward = Vector3.Cross(transform.right, gravityDirection).normalized;
+Vector3 tangentRight = Vector3.Cross(gravityDirection, tangentForward).normalized;
+    if (movementVector.sqrMagnitude > 0.01f)
         {
-            Vector3 move = (transform.forward * movementVector.y + transform.right * movementVector.x)
-                            * moveSpeed * Time.deltaTime;
-            cc.Move(move);
+            Vector3 move = (tangentForward * movementVector.y + tangentRight * movementVector.x)
+                    * moveSpeed * Time.deltaTime;
+    cc.Move(move);
         }
+        Vector3 desiredForward = move.normalized;
+if (desiredForward.sqrMagnitude > 0.01f)
+{
+    Quaternion lookRotation = Quaternion.LookRotation(desiredForward, gravityDirection);
+    transform.rotation = Quaternion.Slerp(transform.rotation, lookRotation, 10f * Time.deltaTime);
+}
         cc.Move(gravity * Time.deltaTime);
         Debug.Log("Movement Vector: " + movementVector);
         Debug.DrawRay(transform.position, gravity, Color.red);
