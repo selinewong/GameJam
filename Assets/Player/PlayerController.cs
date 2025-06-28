@@ -114,7 +114,7 @@ public class PlayerController : MonoBehaviour
     private PlayerInputActions _input;
 
     public Transform planet;         // Assign this in the Inspector to the planet GameObject
-    public float gravitySpeed = 10f; // Gravity strength
+    public float gravitySpeed = 9.81f; // Gravity strength
     private Vector3 gravity;         // Stores the gravity direction and force
     //public float moveSpeed = 50f;
 
