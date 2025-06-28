@@ -19,7 +19,6 @@ public class Planet : MonoBehaviour
 */
 
 //NEW
-using UnityEngine;
 
 public class Planet : MonoBehaviour
 {
