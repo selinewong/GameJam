@@ -105,7 +105,7 @@ public class PlayerController : MonoBehaviour
         */
 
     /// after
-    
+/* Worked a bit   
     public PlayerInputActions _inputActions;
     public MoveData moveData;
     CharacterController cc;
@@ -121,12 +121,30 @@ public class PlayerController : MonoBehaviour
     private System.Action<InputAction.CallbackContext> onMovePerformed;
     private System.Action<InputAction.CallbackContext> onMoveCanceled;
 
+    private Rigidbody rb;
+    private MeshCollider planetCollider;
     private void OnEnable()
     {
         _inputActions = new PlayerInputActions();
         _inputActions.Enable();
     }
 
+    void Start()
+    {
+        rb = GetComponent<Rigidbody>();
+        planetCollider = planet.GetComponent<MeshCollider>();
+
+        if (!rb)
+    {
+        Debug.LogError("Missing Rigidbody on Player!");
+        enabled = false;
+    }
+        if (!planetCollider)
+        {
+            Debug.LogError("Planet must have a MeshCollider.");
+            enabled = false; // disable script to prevent further errors
+        }
+    }
     void Awake()
 {
     cc = GetComponent<CharacterController>();
@@ -154,8 +172,36 @@ public class PlayerController : MonoBehaviour
     private void FixedUpdate()
     {
         Fall();
-        RotateToSurface();
+        RotateToSurface();        // Find nearest point on the planet surface
+         // Cast a ray from player toward the planet's center
+        Vector3 directionToPlanet = (planet.position - transform.position).normalized;
 
+        Ray ray = new Ray(transform.position, directionToPlanet);
+        RaycastHit hit;
+
+        // Check if ray hits the planet
+        if (planetCollider.Raycast(ray, out hit, 1000f))
+        {
+            Vector3 gravityDirection = (hit.point - transform.position).normalized;
+
+        // Apply gravity force
+        rb.AddForce(Vector3.Scale(gravityDirection, gravity));
+
+            // Optional: align object 'up' to gravity direction
+            Quaternion targetRotation = Quaternion.FromToRotation(transform.up, -gravityDirection) * transform.rotation;
+            transform.rotation = Quaternion.Slerp(transform.rotation, targetRotation, Time.deltaTime * 5f);
+        }
+            Vector3 nearestPoint = planetCollider.ClosestPoint(transform.position);
+
+        // Compute direction from object to the surface point
+        //Vector3 gravityDirection = (nearestPoint - transform.position).normalized;
+
+        
+
+        // Optional: rotate object to align 'up' with gravity direction
+        //Quaternion targetRotation = Quaternion.FromToRotation(transform.up, -gravityDirection) * transform.rotation;
+        //transform.rotation = Quaternion.Slerp(transform.rotation, targetRotation, Time.deltaTime * 5f);
+        
         float speed = moveData.moveSpeed * 5f;
         Vector3 totalMovement = (movementVector * speed + gravity) * Time.deltaTime;
 
@@ -177,5 +223,115 @@ public class PlayerController : MonoBehaviour
         Vector3 localMove = transform.forward * _input.y + transform.right * _input.x;
         movementVector = localMove.magnitude > 1f ? localMove.normalized : localMove;
         Debug.Log("Move Vector: " + movementVector);
+    }
+*/
+    public PlayerInputActions _inputActions;
+    public MoveData moveData;
+
+    private CharacterController cc;
+    private Rigidbody rb;
+    private MeshCollider planetCollider;
+
+    private Vector3 movementVector;
+    private Vector3 gravity;
+
+    public Transform planet; // Assign this in the Inspector
+    public float gravitySpeed = 9.81f;
+
+    void Awake()
+    {
+        cc = GetComponent<CharacterController>();
+
+        if (planet == null)
+        {
+            GameObject foundPlanet = GameObject.Find("Planet");
+            if (foundPlanet != null)
+                planet = foundPlanet.transform;
+            else
+                Debug.LogWarning("Planet GameObject not found in scene!");
+        }
+    }
+
+    void OnEnable()
+    {
+        _inputActions = new PlayerInputActions();
+        _inputActions.Enable();
+    }
+
+    void Start()
+    {
+        rb = GetComponent<Rigidbody>();
+        if (!rb)
+        {
+            Debug.LogError("Missing Rigidbody on Player!");
+            enabled = false;
+            return;
+        }
+
+        if (!planet)
+        {
+            Debug.LogError("Planet reference is missing!");
+            enabled = false;
+            return;
+        }
+
+        planetCollider = planet.GetComponent<MeshCollider>();
+        if (!planetCollider)
+        {
+            Debug.LogError("Planet must have a MeshCollider!");
+            enabled = false;
+        }
+    }
+
+    void Update()
+    {
+        Move(_inputActions.PlayerActionMap.Movement.ReadValue<Vector2>());
+    }
+
+    void FixedUpdate()
+    {
+        ApplyGravityWithRaycast();
+        RotateToSurface();
+
+        float speed = moveData.moveSpeed * 5f;
+        Vector3 totalMovement = (movementVector * speed + gravity) * Time.deltaTime;
+        cc.Move(totalMovement);
+    }
+
+    private void Move(Vector2 input)
+    {
+        Vector3 localMove = transform.forward * input.y + transform.right * input.x;
+        movementVector = localMove.magnitude > 1f ? localMove.normalized : localMove;
+        Debug.Log("Move Vector: " + movementVector);
+    }
+
+    private void Fall()
+    {
+        gravity = (planet.position - transform.position).normalized * gravitySpeed;
+    }
+
+    private void ApplyGravityWithRaycast()
+    {
+        Vector3 directionToPlanet = (planet.position - transform.position).normalized;
+        Ray ray = new Ray(transform.position, directionToPlanet);
+        RaycastHit hit;
+
+        if (planetCollider.Raycast(ray, out hit, 1000f))
+        {
+            Vector3 gravityDirection = (hit.point - transform.position).normalized;
+            gravity = gravityDirection * gravitySpeed;
+
+            rb.AddForce(gravity, ForceMode.Acceleration);
+
+            // Optional: align object's up with surface
+            Quaternion targetRotation = Quaternion.FromToRotation(transform.up, -gravityDirection) * transform.rotation;
+            transform.rotation = Quaternion.Slerp(transform.rotation, targetRotation, Time.deltaTime * 5f);
+        }
+    }
+
+    private void RotateToSurface()
+    {
+        Quaternion targetRotation = Quaternion.FromToRotation(transform.up, -gravity) * transform.rotation;
+        transform.rotation = Quaternion.Slerp(transform.rotation, targetRotation, 1f * Time.deltaTime);
     }
 }
