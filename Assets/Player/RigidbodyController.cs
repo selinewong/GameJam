@@ -12,7 +12,6 @@ public class RigidbodyController : Movement
 
     void FixedUpdate()
     {
-        //rig.AddForce((movementVector + gravity) * gravityStrength + jumpVector) 
-          //  * Time.fixedDeltaTime, ForceMode.VelocityChange);
+        rig.AddForce((movementVector + gravityDirection*gravityStrength + jumpVector) * Time.fixedDeltaTime, ForceMode.VelocityChange);
     }
 }

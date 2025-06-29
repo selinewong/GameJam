@@ -3,6 +3,7 @@ using UnityEngine;
 [RequireComponent(typeof(CharacterController))]
 public class FirstPersonController : Movement
 {
+    private Vector3 gravity;
     CharacterController cc;
 
     private void OnEnable()
